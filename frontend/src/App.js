@@ -4,7 +4,7 @@ import './App.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-
+// Icon components
 const Icon = ({ name, className = '' }) => {
   const icons = {
     search: '🔍',
@@ -25,39 +25,109 @@ const Icon = ({ name, className = '' }) => {
   return <span className={className}>{icons[name] || '📄'}</span>;
 };
 
+// Safe JSON parsing function
+const safeJsonParse = (str, defaultValue = []) => {
+  if (!str) return defaultValue;
+  try {
+    return JSON.parse(str);
+  } catch (error) {
+    console.error('JSON parse error:', error);
+    return defaultValue;
+  }
+};
+
 function App() {
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState({
+    name: 'Govind Singh',
+    email: 'govindsinghsatwas@gmail.com',
+    education: 'Dr. B R Ambedkar National Institute of Technology, Jalandhar (Dec 2021 – June 2025)',
+    skills: [
+      { skill: 'C++', proficiency: 5 },
+      { skill: 'JavaScript', proficiency: 5 },
+      { skill: 'SQL', proficiency: 4 },
+      { skill: 'HTML', proficiency: 5 },
+      { skill: 'CSS', proficiency: 5 },
+      { skill: 'React.js', proficiency: 5 },
+      { skill: 'Redux', proficiency: 4 },
+      { skill: 'Node.js', proficiency: 4 },
+      { skill: 'Express.js', proficiency: 4 },
+      { skill: 'TailwindCSS', proficiency: 4 },
+      { skill: 'MongoDB', proficiency: 4 },
+      { skill: 'MySQL', proficiency: 4 },
+      { skill: 'Git', proficiency: 5 },
+      { skill: 'REST APIs', proficiency: 4 },
+      { skill: 'Linux', proficiency: 4 }
+    ],
+    links: {
+      github: 'https://github.com/Govind328',
+      linkedin: 'https://www.linkedin.com/in/govind-singh-131806232/',
+      portfolio: 'https://bitbridge.netlify.app/'
+    },
+    projects: [
+      {
+        id: 1,
+        title: 'Bit-Bridge - College Student Community',
+        description: 'An online discussion forum for college students to collaborate on coding, placement and semester exam doubts, while also sharing academic resources.',
+        links: JSON.stringify([{ name: 'GitHub', url: 'https://github.com/Govind328/bit-bridge' }])
+      },
+      {
+        id: 2,
+        title: 'Sumz - AI Web Summarizer',
+        description: 'A web application React.js and Redux project that allows users to input website links, harnessing the power of AI to extract and summarize relevant information from webpages.',
+        links: JSON.stringify([{ name: 'GitHub', url: 'https://github.com/Govind328/sumz-ai-summarizer' }])
+      },
+      {
+        id: 3,
+        title: 'Bank Management System',
+        description: 'Developed a Bank Management System in C/C++ with file handling and database design. Created modules for account creation, deposits, withdrawals, balance inquiry.',
+        links: JSON.stringify([{ name: 'GitHub', url: 'https://github.com/Govind328/bank-management-system' }])
+      }
+    ],
+    work: [
+      {
+        id: 1,
+        company: 'Software Management Solutions Ltd',
+        position: 'Software Engineer Intern',
+        duration: 'June 2024 – July 2024',
+        description: 'Developed a Bank Management System in C/C++ with file handling and database design. Created modules for account creation, deposits, withdrawals, balance inquiry. Implemented secure login-based authentication with admin privileges.'
+      },
+      {
+        id: 2,
+        company: 'NIT Jalandhar',
+        position: 'Student Developer & Core Member, Fine Arts Society',
+        duration: '2021 – 2025',
+        description: 'Worked on academic projects involving Data Structures, Operating Systems, DBMS, and OOP. Core member of Fine Arts Society organizing technical and cultural events.'
+      }
+    ]
+  });
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [skillFilter, setSkillFilter] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [filteredProjects, setFilteredProjects] = useState(null);
   const [topSkills, setTopSkills] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
-    fetchProfile();
     fetchTopSkills();
   }, []);
 
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/profile?t=${Date.now()}`);
-      setProfile(response.data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchTopSkills = async () => {
     try {
+      // If API is available, use it; otherwise use local data
       const response = await axios.get(`${API_BASE_URL}/skills/top`);
       setTopSkills(response.data);
     } catch (error) {
-      console.error('Error fetching top skills:', error);
+      console.error('Error fetching top skills, using local data:', error);
+      // Use local skills data as fallback
+      setTopSkills([
+        { skill: 'C++', proficiency: 5 },
+        { skill: 'JavaScript', proficiency: 5 },
+        { skill: 'React.js', proficiency: 5 },
+        { skill: 'HTML', proficiency: 5 },
+        { skill: 'CSS', proficiency: 5 }
+      ]);
     }
   };
 
@@ -70,6 +140,22 @@ function App() {
       setSearchResults(response.data);
     } catch (error) {
       console.error('Error searching:', error);
+      // Implement local search as fallback
+      const localResults = {
+        skills: profile.skills.filter(skill => 
+          skill.skill.toLowerCase().includes(searchTerm.toLowerCase())
+        ),
+        projects: profile.projects.filter(project => 
+          project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          project.description.toLowerCase().includes(searchTerm.toLowerCase())
+        ),
+        work: profile.work.filter(job => 
+          job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          job.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          job.description.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      };
+      setSearchResults(localResults);
     } finally {
       setSearchLoading(false);
     }
@@ -85,7 +171,13 @@ function App() {
       const response = await axios.get(`${API_BASE_URL}/projects?skill=${encodeURIComponent(skillFilter)}`);
       setFilteredProjects(response.data);
     } catch (error) {
-      console.error('Error filtering projects:', error);
+      console.error('Error filtering projects, using local filter:', error);
+      // Implement local filtering as fallback
+      const filtered = profile.projects.filter(project => 
+        project.title.toLowerCase().includes(skillFilter.toLowerCase()) ||
+        project.description.toLowerCase().includes(skillFilter.toLowerCase())
+      );
+      setFilteredProjects(filtered);
     }
   };
 
@@ -95,24 +187,13 @@ function App() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="loading">
-          <div className="loading-spinner"></div>
-          <p>Loading your portfolio...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container">
       <header className="hero-header">
         <h1>Govind Singh</h1>
         <p>Full Stack Developer & Problem Solver</p>
         <div className="hero-badge">
-          <Icon name="code" /> Crafting digital experiences with code
+          <Icon name="code" /> Knight at LeetCode | 600+ Problems Solved
         </div>
       </header>
 
@@ -130,10 +211,10 @@ function App() {
             <h3><Icon name="skill" /> Skills</h3>
             <div className="skills-grid">
               <div className="skill-category">
-                <h4>Frontend</h4>
+                <h4>Languages</h4>
                 <div className="skills-list">
-                  {profile.skills && profile.skills.filter(skill => 
-                    ['JavaScript', 'React', 'HTML', 'CSS'].includes(skill.skill)
+                  {profile.skills.filter(skill => 
+                    ['C++', 'JavaScript', 'SQL', 'HTML', 'CSS'].includes(skill.skill)
                   ).map((skill, index) => (
                     <span key={index} className="skill-tag">
                       {skill.skill} <Icon name="star" />{skill.proficiency}/5
@@ -143,10 +224,23 @@ function App() {
               </div>
               
               <div className="skill-category">
-                <h4>Backend</h4>
+                <h4>Frameworks & Tools</h4>
                 <div className="skills-list">
-                  {profile.skills && profile.skills.filter(skill => 
-                    ['Node.js', 'Express', 'Python', 'SQL'].includes(skill.skill)
+                  {profile.skills.filter(skill => 
+                    ['React.js', 'Redux', 'Node.js', 'Express.js', 'TailwindCSS', 'Git', 'REST APIs', 'Linux'].includes(skill.skill)
+                  ).map((skill, index) => (
+                    <span key={index} className="skill-tag">
+                      {skill.skill} <Icon name="star" />{skill.proficiency}/5
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="skill-category">
+                <h4>Databases</h4>
+                <div className="skills-list">
+                  {profile.skills.filter(skill => 
+                    ['MongoDB', 'MySQL'].includes(skill.skill)
                   ).map((skill, index) => (
                     <span key={index} className="skill-tag">
                       {skill.skill} <Icon name="star" />{skill.proficiency}/5
@@ -158,21 +252,15 @@ function App() {
 
             <h3><Icon name="link" /> Connect With Me</h3>
             <div className="profile-links">
-              {profile.links && profile.links.github && (
-                <a href={profile.links.github} target="_blank" rel="noopener noreferrer" className="profile-link github">
-                  <Icon name="github" /> GitHub
-                </a>
-              )}
-              {profile.links && profile.links.linkedin && (
-                <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer" className="profile-link linkedin">
-                  <Icon name="linkedin" /> LinkedIn
-                </a>
-              )}
-              {profile.links && profile.links.portfolio && (
-                <a href={profile.links.portfolio} target="_blank" rel="noopener noreferrer" className="profile-link portfolio">
-                  <Icon name="portfolio" /> Portfolio
-                </a>
-              )}
+              <a href={profile.links.github} target="_blank" rel="noopener noreferrer" className="profile-link github">
+                <Icon name="github" /> GitHub
+              </a>
+              <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer" className="profile-link linkedin">
+                <Icon name="linkedin" /> LinkedIn
+              </a>
+              <a href={profile.links.portfolio} target="_blank" rel="noopener noreferrer" className="profile-link portfolio">
+                <Icon name="portfolio" /> Portfolio
+              </a>
             </div>
           </div>
         </div>
@@ -211,7 +299,7 @@ function App() {
               <button onClick={() => {
                 setSkillFilter('');
                 setFilteredProjects(null);
-              }} className="search-button" style={{background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'}}>
+              }} className="search-button clear-button">
                 Clear Filter
               </button>
             )}
@@ -228,7 +316,7 @@ function App() {
         {searchResults && !searchLoading && (
           <div className="search-results">
             <h3>Search Results for "{searchTerm}"</h3>
-            {/* Search results content remains the same */}
+            {/* Display search results here */}
           </div>
         )}
       </div>
@@ -242,7 +330,7 @@ function App() {
               <p>{project.description}</p>
               {project.links && (
                 <div className="project-links">
-                  {JSON.parse(project.links).map((link, index) => (
+                  {safeJsonParse(project.links).map((link, index) => (
                     <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="project-link">
                       <Icon name="link" /> {link.name}
                     </a>
@@ -272,20 +360,39 @@ function App() {
         </div>
       </div>
 
-      {profile.work && profile.work.length > 0 && (
-        <div className="section-card">
-          <h2 className="section-title"><Icon name="work" /> Experience</h2>
-          <div className="projects-grid">
-            {profile.work.map(job => (
-              <div key={job.id} className="project-card">
-                <h3>{job.position} at {job.company}</h3>
-                <p className="text-sm text-gray-600 mb-2">{job.duration}</p>
-                <p>{job.description}</p>
-              </div>
-            ))}
+      <div className="section-card">
+        <h2 className="section-title"><Icon name="work" /> Experience</h2>
+        <div className="projects-grid">
+          {profile.work.map(job => (
+            <div key={job.id} className="project-card">
+              <h3>{job.position} at {job.company}</h3>
+              <p className="job-duration">{job.duration}</p>
+              <p>{job.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section-card">
+        <h2 className="section-title"><Icon name="trophy" /> Achievements</h2>
+        <div className="achievements-list">
+          <div className="achievement-item">
+            <Icon name="trophy" /> Knight at LeetCode
+          </div>
+          <div className="achievement-item">
+            <Icon name="trophy" /> Global Rank 138 in Weekly Contest at LeetCode #453 and 212 in #443
+          </div>
+          <div className="achievement-item">
+            <Icon name="trophy" /> Solved 600+ Coding Problems on LeetCode and GFG
+          </div>
+          <div className="achievement-item">
+            <Icon name="trophy" /> All India Rank 15,970 in JEE Mains 2021 among 1+ million candidates
+          </div>
+          <div className="achievement-item">
+            <Icon name="trophy" /> Core Member, Fine Arts Society (FAS), NIT Jalandhar
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -36,3 +36,5 @@ jest.config.js
 # Temporary
 *.tmp
 *.swp
+
+frontend/.env
