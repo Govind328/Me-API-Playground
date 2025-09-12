@@ -14,7 +14,7 @@ Frontend (React): (https://meapi-playground.netlify.app/)
 
 Backend (API):(https://me-api-playground-vtaa.onrender.com)
 
-Resume: (https://drive.google.com/file/d/1_kXlxezyFuGr41q5gUGbJn1VamTV9M_E/view?usp=sharing)
+Resume: (https://drive.google.com/file/d/1CujCv7sts4-HDvw-g_WNLYN8MkG1AslQ/view?usp=sharing)
 
 Features
 
